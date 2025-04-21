@@ -61,6 +61,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.6")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("androidx.compose.material3:material3:1.2.0") // 또는 최신버전
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

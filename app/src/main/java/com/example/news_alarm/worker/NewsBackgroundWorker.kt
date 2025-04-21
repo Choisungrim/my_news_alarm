@@ -1,5 +1,6 @@
-package com.example.news_alarm
+package com.example.news_alarm.worker
 
+import android.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -11,6 +12,10 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.*
+import com.example.news_alarm.model.NewsItem
+import com.example.news_alarm.util.fetchFeedUrlsFromAssets
+import com.example.news_alarm.util.fetchRssFeed
+import com.example.news_alarm.util.isToday
 import java.util.concurrent.TimeUnit
 
 class NewsCheckWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
@@ -59,7 +64,7 @@ class NewsCheckWorker(appContext: Context, params: WorkerParameters) : Coroutine
         )
 
         val builder = NotificationCompat.Builder(context, "rss_alerts")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_dialog_info)
             .setContentTitle("🔔 관심 뉴스 도착!")
             .setContentText(item.title.take(100)) // 길이 제한 보정
             .setStyle(NotificationCompat.BigTextStyle().bigText(item.summary.take(300)))
@@ -99,8 +104,11 @@ class NewsCheckWorker(appContext: Context, params: WorkerParameters) : Coroutine
     }
 }
 
-fun scheduleNewsChecker(context: Context) {
-    val request = PeriodicWorkRequestBuilder<NewsCheckWorker>(15, TimeUnit.MINUTES)
+fun scheduleNewsChecker(context: Context, intervalMinutes: Long) {
+    // 최소 주기 제한 (WorkManager는 15분 이상만 허용)
+    val safeInterval = intervalMinutes.coerceAtLeast(15)
+
+    val request = PeriodicWorkRequestBuilder<NewsCheckWorker>(safeInterval, TimeUnit.MINUTES)
         .setConstraints(
             Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
